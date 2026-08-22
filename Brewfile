@@ -38,11 +38,12 @@ brew "ruff"
 
 # GitHub, cloud, infrastructure, and security
 tap "hashicorp/tap"
+tap "terraform-linters/tap"
 brew "gh"
 brew "awscli"
 brew "aws-vault"
 brew "hashicorp/tap/terraform"
-brew "tflint"
+cask "terraform-linters/tap/tflint"
 brew "trivy"
 
 # API, container, and data clients (servers are in Brewfile.data)
