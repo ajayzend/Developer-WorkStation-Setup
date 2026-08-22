@@ -1,0 +1,7 @@
+# Local server packages. Prefer project-specific Docker Compose services where possible.
+tap "mongodb/brew"
+brew "kafka"
+brew "mongodb-community"
+brew "mongosh"
+brew "mysql"
+brew "opensearch"

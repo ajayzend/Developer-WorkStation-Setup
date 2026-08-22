@@ -1,0 +1,14 @@
+# Optional cloud-native and polyglot tooling for future projects.
+brew "act"
+brew "age"
+brew "direnv"
+brew "go"
+brew "grpcurl"
+brew "helm"
+brew "k9s"
+brew "kubectl"
+brew "pre-commit"
+brew "protobuf"
+brew "rustup"
+brew "sqlite"
+
