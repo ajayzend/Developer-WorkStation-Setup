@@ -119,3 +119,38 @@ dev-doctor() {
     fi
   done
 }
+
+# Quick reference for the aliases and functions defined in this file.
+cheatsheet() {
+  local entries=(
+    'll:list files, long format, hidden, git status'
+    'la:list files, hidden, no long format'
+    'lt:tree view, 2 levels deep'
+    'c:clear the screen'
+    '..:cd one directory up'
+    '...:cd two directories up'
+    'g:git'
+    'gs:git status, short, with branch'
+    'gl:git log, one line per commit, graph, last 20'
+    'gd:git diff'
+    'dc:docker compose'
+    'dps:docker ps, name/status/ports table'
+    'tf:terraform'
+    'awswho:aws sts get-caller-identity'
+    'json:jq .  (pretty-print JSON from stdin)'
+    'py:python3'
+    'venv:uv venv'
+    'mkcd <dir>:create a directory and cd into it'
+    'jget [file|url]:pretty-print JSON from a file, stdin, or URL'
+    'dev-doctor:show installed tool versions and locations'
+    'cheatsheet:show this list'
+  )
+  local entry name desc
+  printf '%-18s %s\n' 'COMMAND' 'DESCRIPTION'
+  printf '%-18s %s\n' '-------' '-----------'
+  for entry in $entries; do
+    name="${entry%%:*}"
+    desc="${entry#*:}"
+    printf '%-18s %s\n' "$name" "$desc"
+  done
+}
