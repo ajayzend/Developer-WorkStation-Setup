@@ -49,13 +49,6 @@ if (( ${#profile_flags[@]} > 1 )); then
   exit 2
 fi
 
-run() {
-  printf '+ '
-  printf '%q ' "$@"
-  printf '\n'
-  "$dry_run" || "$@"
-}
-
 if [[ "$(uname -s)" != "Darwin" ]]; then
   printf 'This bootstrap currently supports macOS only.\n' >&2
   exit 1
@@ -65,6 +58,34 @@ if ! command -v brew >/dev/null 2>&1; then
   printf '%s\n' 'Homebrew is required. Install it from https://brew.sh, then rerun this script.' >&2
   exit 1
 fi
+
+# Some tools are commonly already present via an alternate tap or a manual
+# install (PHP via shivammathur/php, Docker Desktop/Postman installed
+# directly). Installing this repo's plain formula/cask on top of those causes
+# an avoidable conflict, so skip the manifest entry when a working
+# equivalent is already there.
+skip_reasons=()
+skip_patterns=()
+if command -v php >/dev/null 2>&1; then
+  skip_reasons+=("php (already on PATH)")
+  skip_patterns+=(-e '/^brew "php"$/d')
+fi
+if [[ -d "/Applications/Docker.app" ]]; then
+  skip_reasons+=("docker-desktop (Docker.app already installed)")
+  skip_patterns+=(-e '/^cask "docker-desktop"$/d')
+fi
+if [[ -d "/Applications/Postman.app" ]]; then
+  skip_reasons+=("postman (Postman.app already installed)")
+  skip_patterns+=(-e '/^cask "postman"$/d')
+fi
+
+apply_skips() {
+  if (( ${#skip_patterns[@]} == 0 )); then
+    cat "$1"
+  else
+    sed "${skip_patterns[@]}" "$1"
+  fi
+}
 
 manifests=("$REPO_DIR/Brewfile")
 
@@ -102,6 +123,13 @@ for manifest in "${manifests[@]}"; do
   sed -nE 's/^(brew|cask|npm|tap) "([^"]+)".*/    - \1: \2/p' "$manifest"
 done
 
+if (( ${#skip_reasons[@]} > 0 )); then
+  printf '\nAlready satisfied outside this manifest, will be skipped:\n'
+  for reason in "${skip_reasons[@]}"; do
+    printf '  - %s\n' "$reason"
+  done
+fi
+
 printf '\nSafety behavior:\n'
 printf '  - Already-installed packages will be skipped.\n'
 printf '  - Installed packages will not be upgraded.\n'
@@ -126,7 +154,8 @@ if ! "$dry_run" && ! "$assume_yes"; then
 fi
 
 for manifest in "${manifests[@]}"; do
-  run brew bundle --no-upgrade --file "$manifest"
+  printf '+ brew bundle --no-upgrade --file %s\n' "$manifest"
+  "$dry_run" || apply_skips "$manifest" | brew bundle --no-upgrade --file=-
 done
 
 if "$link_shell"; then
