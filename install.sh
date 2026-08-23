@@ -61,9 +61,10 @@ fi
 
 # Some tools are commonly already present via an alternate tap or a manual
 # install (PHP via shivammathur/php, Docker Desktop/Postman/VS Code
-# installed directly). Installing this repo's plain formula/cask on top of
-# those causes an avoidable conflict, so skip the manifest entry when a
-# working equivalent is already there.
+# installed directly, Claude Code via its native installer). Installing
+# this repo's plain formula/cask/npm entry on top of those causes an
+# avoidable conflict or redundant install, so skip the manifest entry when
+# a working equivalent is already there.
 skip_reasons=()
 skip_patterns=()
 if command -v php >/dev/null 2>&1; then
@@ -77,6 +78,10 @@ fi
 if [[ -d "/Applications/Postman.app" ]]; then
   skip_reasons+=("postman (Postman.app already installed)")
   skip_patterns+=(-e '/^cask "postman"$/d')
+fi
+if command -v claude >/dev/null 2>&1; then
+  skip_reasons+=("@anthropic-ai/claude-code (claude already on PATH)")
+  skip_patterns+=(-e '/^npm "@anthropic-ai\/claude-code"$/d')
 fi
 if [[ -d "/Applications/Visual Studio Code.app" ]] || command -v code >/dev/null 2>&1; then
   skip_reasons+=("visual-studio-code (already installed)")
