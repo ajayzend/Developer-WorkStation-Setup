@@ -106,7 +106,7 @@ dev-doctor() {
     docker aws aws-vault terraform tflint trivy
     jq yq curl http kcat redis-cli mysql mongosh
     code tmux claude ollama
-    go cargo protoc grpcurl kubectl helm k9s act direnv age sqlite3
+    go rustup cargo protoc grpcurl kubectl helm k9s act direnv age sqlite3
   )
   local tool
   printf '%-14s %s\n' 'TOOL' 'LOCATION'
