@@ -18,6 +18,50 @@ jget response.json           # pretty JSON helper
 jget https://api.example.com/health
 ```
 
+## Command-line productivity tools
+
+These replace or complement everyday POSIX commands. Scripts should keep using the standard commands (`ls`, `find`, `cat`, `grep`) for portability; use the modern tools interactively.
+
+```bash
+bat README.md                        # cat with syntax highlighting and line numbers
+eza --tree --level=2                 # ls replacement; ll/la/lt aliases already wrap it
+fd '\.log$' .                        # fast, friendlier find
+fzf                                  # fuzzy-pick from stdin, e.g. vim $(fzf)
+history | fzf                        # fuzzy search shell history
+z projectname                        # zoxide: jump to a frecently-used directory
+zi                                   # zoxide: interactive pick among matches
+tmux new -s work                     # persistent, multi-pane terminal session
+tmux attach -t work
+```
+
+Enable `git-delta` as git's diff/show pager once per machine:
+
+```bash
+git config --global core.pager delta
+```
+
+Security and diagnostics tools:
+
+```bash
+mkcert -install                      # trust a local CA, once per machine
+mkcert localhost 127.0.0.1           # issue a locally-trusted TLS cert
+gpg --full-generate-key              # for commit signing or secret encryption
+git config --global commit.gpgsign true
+sops --encrypt --in-place secrets.yaml
+sops secrets.yaml                    # decrypt and open in $EDITOR
+shellcheck install.sh                # lint a shell script
+nmap -sV localhost                   # scan only hosts you're authorized to test
+trivy image myapp:latest             # scan a container image for vulnerabilities
+trivy fs .                           # scan a filesystem/project for vulnerabilities
+```
+
+`aws-vault` stores AWS credentials in the macOS keychain and injects short-lived session credentials instead of writing plaintext keys:
+
+```bash
+aws-vault add company-dev
+aws-vault exec company-dev -- aws sts get-caller-identity
+```
+
 ## Git and GitHub
 
 Set identity once, use SSH or GitHub's credential flow, and protect the main branch on the server.
@@ -110,9 +154,45 @@ Ollama supports local model inference, but local execution does not automaticall
 
 ## Future-ready platform tools
 
-The optional `--future` profile includes Go, Rust, Kubernetes (`kubectl`), Helm, k9s, Protocol Buffers, gRPC tooling, `act`, pre-commit, `direnv`, `age`, and SQLite. Install these when a project needs them rather than making every workstation heavy by default.
+The optional `--future` profile installs these. Install the profile when a project actually needs them rather than making every workstation heavy by default.
 
-Review every `.envrc` before running `direnv allow`, because it executes shell code. Keep Kubernetes contexts clearly named, check `kubectl config current-context` before changes, and never commit kubeconfig files or cluster tokens.
+```bash
+go run .                             # Go
+go build ./...
+go test ./...
+
+rustup default stable                # Rust
+cargo new my-project
+cargo build --release
+
+kubectl config get-contexts          # Kubernetes
+kubectl config current-context
+kubectl get pods -n default
+helm repo add stable https://charts.helm.sh/stable
+helm install my-release stable/chart-name
+k9s                                  # interactive cluster dashboard
+
+grpcurl -plaintext localhost:50051 list   # gRPC
+protoc --go_out=. service.proto           # Protocol Buffers
+
+act -l                               # list GitHub Actions workflows/jobs
+act pull_request                     # run the pull_request event locally
+
+pre-commit install                   # install git hooks for this repo
+pre-commit run --all-files
+
+echo 'export API_URL=http://localhost:3000' > .envrc   # direnv
+direnv allow
+
+age-keygen -o key.txt                # age: simple modern file encryption
+age -r <public-key> -o secret.age secret.txt
+age -d -i key.txt secret.age
+
+sqlite3 app.db                       # SQLite
+sqlite3 app.db '.tables'
+```
+
+Review every `.envrc` before running `direnv allow`, because it executes shell code. Keep Kubernetes contexts clearly named, check `kubectl config current-context` before changes, and never commit kubeconfig files or cluster tokens. Treat `age`/`sops` private keys like any other credential: never commit them, and store them in a password manager or secret store.
 
 ## Docker and Compose
 
