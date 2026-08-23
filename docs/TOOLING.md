@@ -222,7 +222,7 @@ Set timeouts and retries consciously, validate status codes and schemas, redact 
 
 Install the `code` command from VS Code if the cask has not provided it. Keep repository-specific settings in `.vscode/settings.json` only when they benefit everyone.
 
-Suggested extensions:
+`./install.sh --desktop` (and `--all`) installs these extensions automatically if missing. To install them manually instead:
 
 ```bash
 code --install-extension dbaeumer.vscode-eslint

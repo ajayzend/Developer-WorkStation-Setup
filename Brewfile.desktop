@@ -1,4 +1,3 @@
-tap "homebrew/cask"
 cask "docker-desktop"
 cask "postman"
 cask "visual-studio-code"

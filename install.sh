@@ -60,10 +60,10 @@ if ! command -v brew >/dev/null 2>&1; then
 fi
 
 # Some tools are commonly already present via an alternate tap or a manual
-# install (PHP via shivammathur/php, Docker Desktop/Postman installed
-# directly). Installing this repo's plain formula/cask on top of those causes
-# an avoidable conflict, so skip the manifest entry when a working
-# equivalent is already there.
+# install (PHP via shivammathur/php, Docker Desktop/Postman/VS Code
+# installed directly). Installing this repo's plain formula/cask on top of
+# those causes an avoidable conflict, so skip the manifest entry when a
+# working equivalent is already there.
 skip_reasons=()
 skip_patterns=()
 if command -v php >/dev/null 2>&1; then
@@ -78,6 +78,10 @@ if [[ -d "/Applications/Postman.app" ]]; then
   skip_reasons+=("postman (Postman.app already installed)")
   skip_patterns+=(-e '/^cask "postman"$/d')
 fi
+if [[ -d "/Applications/Visual Studio Code.app" ]] || command -v code >/dev/null 2>&1; then
+  skip_reasons+=("visual-studio-code (already installed)")
+  skip_patterns+=(-e '/^cask "visual-studio-code"$/d')
+fi
 
 apply_skips() {
   if (( ${#skip_patterns[@]} == 0 )); then
@@ -85,6 +89,32 @@ apply_skips() {
   else
     sed "${skip_patterns[@]}" "$1"
   fi
+}
+
+vscode_extensions=(
+  dbaeumer.vscode-eslint
+  esbenp.prettier-vscode
+  bmewburn.vscode-intelephense-client
+  ms-azuretools.vscode-docker
+  hashicorp.terraform
+  redhat.vscode-yaml
+  editorconfig.editorconfig
+)
+
+install_vscode_extensions() {
+  if ! command -v code >/dev/null 2>&1; then
+    return
+  fi
+  local installed ext
+  installed="$(code --list-extensions 2>/dev/null)"
+  for ext in "${vscode_extensions[@]}"; do
+    if grep -Fxqi "$ext" <<<"$installed"; then
+      printf '  - %s already installed\n' "$ext"
+    else
+      printf '  - installing %s\n' "$ext"
+      code --install-extension "$ext" >/dev/null
+    fi
+  done
 }
 
 manifests=("$REPO_DIR/Brewfile")
@@ -130,6 +160,13 @@ if (( ${#skip_reasons[@]} > 0 )); then
   done
 fi
 
+if [[ "$profile" == "desktop" || "$profile" == "all" ]]; then
+  printf '\nRecommended VS Code extensions will be installed if missing:\n'
+  for ext in "${vscode_extensions[@]}"; do
+    printf '  - %s\n' "$ext"
+  done
+fi
+
 printf '\nSafety behavior:\n'
 printf '  - Already-installed packages will be skipped.\n'
 printf '  - Installed packages will not be upgraded.\n'
@@ -157,6 +194,11 @@ for manifest in "${manifests[@]}"; do
   printf '+ brew bundle --no-upgrade --file %s\n' "$manifest"
   "$dry_run" || apply_skips "$manifest" | brew bundle --no-upgrade --file=-
 done
+
+if [[ "$profile" == "desktop" || "$profile" == "all" ]] && ! "$dry_run"; then
+  printf '\nInstalling recommended VS Code extensions...\n'
+  install_vscode_extensions
+fi
 
 if "$link_shell"; then
   target="$HOME/.zshrc"
